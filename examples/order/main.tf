@@ -28,7 +28,6 @@ resource "hashicups_order" "edu" {
   }]
 }
 
-
 output "edu_order" {
   value = hashicups_order.edu
 }

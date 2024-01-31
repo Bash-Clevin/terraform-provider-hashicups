@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
@@ -15,6 +18,16 @@ var (
 	_ datasource.DataSource              = &coffeesDataSource{}
 	_ datasource.DataSourceWithConfigure = &coffeesDataSource{}
 )
+
+// NewCoffeesDataSource is a helper function to simplify the provider implementation.
+func NewCoffeesDataSource() datasource.DataSource {
+	return &coffeesDataSource{}
+}
+
+// coffeesDataSource is the data source implementation.
+type coffeesDataSource struct {
+	client *hashicups.Client
+}
 
 // coffeesDataSourceModel maps the data source schema data.
 type coffeesDataSourceModel struct {
@@ -36,17 +49,6 @@ type coffeesModel struct {
 // coffeesIngredientsModel maps coffee ingredients data.
 type coffeesIngredientsModel struct {
 	ID types.Int64 `tfsdk:"id"`
-}
-
-// NewCoffeesDataSource is a helper function to simplify the provider implementation.
-func NewCoffeesDataSource() datasource.DataSource {
-	return &coffeesDataSource{}
-}
-
-// coffeesDataSource is the data source implementation.
-// coffeesDataSource is the data source implementation.
-type coffeesDataSource struct {
-	client *hashicups.Client
 }
 
 // Metadata returns the data source type name.
@@ -111,6 +113,25 @@ func (d *coffeesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 	}
 }
 
+// Configure adds the provider configured client to the data source.
+func (d *coffeesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	client, ok := req.ProviderData.(*hashicups.Client)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *hashicups.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	d.client = client
+}
+
 // Read refreshes the Terraform state with the latest data.
 func (d *coffeesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state coffeesDataSourceModel
@@ -152,23 +173,4 @@ func (d *coffeesDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
-}
-
-// Configure adds the provider configured client to the data source.
-func (d *coffeesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	client, ok := req.ProviderData.(*hashicups.Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *hashicups.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-
-		return
-	}
-
-	d.client = client
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
@@ -19,13 +22,6 @@ var (
 	_ provider.Provider = &hashicupsProvider{}
 )
 
-// hashicupsProviderModel maps provider schema data to a Go type.
-type hashicupsProviderModel struct {
-	Host     types.String `tfsdk:"host"`
-	Username types.String `tfsdk:"username"`
-	Password types.String `tfsdk:"password"`
-}
-
 // New is a helper function to simplify provider server and testing implementation.
 func New(version string) func() provider.Provider {
 	return func() provider.Provider {
@@ -41,6 +37,13 @@ type hashicupsProvider struct {
 	// provider is built and ran locally, and "test" when running acceptance
 	// testing.
 	version string
+}
+
+// hashicupsProviderModel maps provider schema data to a Go type.
+type hashicupsProviderModel struct {
+	Host     types.String `tfsdk:"host"`
+	Username types.String `tfsdk:"username"`
+	Password types.String `tfsdk:"password"`
 }
 
 // Metadata returns the provider type name.
@@ -71,9 +74,9 @@ func (p *hashicupsProvider) Schema(_ context.Context, _ provider.SchemaRequest, 
 	}
 }
 
-// Configure prepares a HashiCups API client for data sources and resources.
 func (p *hashicupsProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	tflog.Info(ctx, "Configuring HashiCups client")
+
 	// Retrieve provider data from configuration
 	var config hashicupsProviderModel
 	diags := req.Config.Get(ctx, &config)

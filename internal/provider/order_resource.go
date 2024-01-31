@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
@@ -22,6 +25,16 @@ var (
 	_ resource.ResourceWithImportState = &orderResource{}
 )
 
+// NewOrderResource is a helper function to simplify the provider implementation.
+func NewOrderResource() resource.Resource {
+	return &orderResource{}
+}
+
+// orderResource is the resource implementation.
+type orderResource struct {
+	client *hashicups.Client
+}
+
 // orderResourceModel maps the resource schema data.
 type orderResourceModel struct {
 	ID          types.String     `tfsdk:"id"`
@@ -45,22 +58,11 @@ type orderItemCoffeeModel struct {
 	Image       types.String  `tfsdk:"image"`
 }
 
-// NewOrderResource is a helper function to simplify the provider implementation.
-func NewOrderResource() resource.Resource {
-	return &orderResource{}
-}
-
-// orderResource is the resource implementation.
-type orderResource struct {
-	client *hashicups.Client
-}
-
 // Metadata returns the resource type name.
 func (r *orderResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_order"
 }
 
-// Schema defines the schema for the resource.
 // Schema defines the schema for the resource.
 func (r *orderResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
@@ -121,6 +123,26 @@ func (r *orderResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			},
 		},
 	}
+}
+
+// Configure adds the provider configured client to the resource.
+func (r *orderResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	client, ok := req.ProviderData.(*hashicups.Client)
+
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *hashicups.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	r.client = client
 }
 
 // Create a new resource.
@@ -306,26 +328,6 @@ func (r *orderResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		)
 		return
 	}
-}
-
-// Configure adds the provider configured client to the resource.
-func (r *orderResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	client, ok := req.ProviderData.(*hashicups.Client)
-
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *hashicups.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-
-		return
-	}
-
-	r.client = client
 }
 
 func (r *orderResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
